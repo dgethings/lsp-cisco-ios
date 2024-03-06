@@ -9,12 +9,9 @@ import (
 func Completion(ctx *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
 	var items []protocol.CompletionItem
 
-	for token, nextToken := range ios.Enable {
-		next := nextToken
+	for _, token := range ios.Keywords {
 		items = append(items, protocol.CompletionItem{
-			Label:      token,
-			Detail:     &next,
-			InsertText: &next,
+			Label: token,
 		})
 	}
 	return items, nil
