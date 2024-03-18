@@ -1,53 +1,41 @@
 package ios
 
 import (
+	"bytes"
+	"fmt"
 	"log"
-	"net/http"
-	"strings"
 
-	"golang.org/x/net/html"
+	"github.com/gocolly/colly/v2"
 )
 
 const url = "https://www.cisco.com/c/en/us/td/docs/ios/fundamentals/command/reference/cf_book/cf_a1.html"
 
 func getKeywords() string {
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-	doc, err := html.Parse(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var cmdTag *html.Node
-	var cmd []string
-	var f func(*html.Node)
-	f = func(h *html.Node) {
-		if h.Type == html.ElementNode && h.Data == "h2" {
-			if len(h.Attr) == 1 && h.Attr[0].Val == "pCRC_CmdRefCommand" {
-				// log.Println("Found tag")
-				// var buf bytes.Buffer
-				// w := io.Writer(&buf)
-				// html.Render(w, h)
-				// log.Println(buf.String())
-				cmdTag = h
-			}
-			if cmdTag != nil {
-				log.Println("Looking for text")
-				if h.FirstChild != nil && h.FirstChild.Type == html.TextNode {
-					log.Println("Found text node")
-					cmd = append(cmd, h.FirstChild.Data)
-				}
-			}
-		}
-		for e := h.FirstChild; e != nil; e = e.NextSibling {
-			f(e)
-		}
-	}
-	f(doc)
+	kws := make(map[string][]string)
+	c := colly.NewCollector()
 
-	return string(strings.Join(cmd, ", "))
+	c.OnHTML("p.pCE_CmdEnv", func(h *colly.HTMLElement) {
+		cmd := h.ChildText("b.cCN_CmdName")
+		kws[cmd] = append(kws[cmd], h.Text)
+	})
+
+	c.OnRequest(func(r *colly.Request) {
+		log.Println("Visting", r.URL)
+	})
+
+	c.OnError(func(r *colly.Response, err error) {
+		log.Fatalf("%s caused: %s", r.Request.URL, err)
+	})
+
+	c.Visit(url)
+
+	b := new(bytes.Buffer)
+	for k, v := range kws {
+		for _, c := range v {
+			fmt.Fprintf(b, "%s: %s,", k, c)
+		}
+	}
+	return string(b.String())
 }
 
 var Keywords = []string{
