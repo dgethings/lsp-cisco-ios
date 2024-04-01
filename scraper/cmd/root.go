@@ -4,8 +4,6 @@ Copyright © 2024 David Gethings
 package cmd
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"log/slog"
 	"os"
@@ -42,31 +40,26 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ios_scraper.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// slog.SetLogLoggerLevel(slog.LevelDebug)
 }
 
 const url = "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fundamentals/command/cf_command_ref.html"
 
-type keywords map[string][]string
-
-var Keywords = make(keywords)
+var keywords [][]string
 
 func getKeywords() error {
-	c := colly.NewCollector(colly.Async(true))
+	c := colly.NewCollector()
 
 	c.OnHTML("ul#bookToc", func(h *colly.HTMLElement) {
+		// iterate through akk the "book" sections
 		h.ForEach("li", func(_ int, li *colly.HTMLElement) {
+			// ignore the Introduction section, that doesn't contain any commands
 			if li.ChildText("a") != "Introduction" {
 				url := fmt.Sprintf("%s%s", "https://www.cisco.com", li.ChildAttr("a", "href"))
-				parseSection(Keywords, url)
+				kw := parseSection(url)
+				if len(kw) > 0 {
+					keywords = append(keywords, kw)
+				}
 			}
 		})
 	})
@@ -80,39 +73,25 @@ func getKeywords() error {
 	})
 
 	c.Visit(url)
-	c.Wait()
 
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	enc.Encode(Keywords)
-	f, err := os.Create("completions.go")
-	if err != nil {
-		return err
+	fmt.Println(start)
+	slog.Debug("COMPLETE LIST", "kw", keywords)
+	for _, k := range keywords {
+		fmt.Printf(block, k[0], k[1])
 	}
-	defer f.Close()
-	f.WriteString("package ios\n\n")
-	f.WriteString("import protocol \"github.com/tliron/glsp/protocol_3_16\"\n\n")
-	fmt.Fprintf(f, "var Completions make([]protocol.CompletionItem, %d)\n\n", len(Keywords))
-	block := `
-Completions = append(Completions, protocol.CompletionItem{
-	Label:      "%s",
-	InsertText: "%s",
-})
-`
-	for kw, comps := range Keywords {
-		for _, comp := range comps {
-			fmt.Fprintf(f, block, kw, comp)
-		}
-	}
-
+	fmt.Println(end)
 	return nil
 }
 
-func parseSection(k keywords, url string) {
+func parseSection(url string) []string {
+	var k []string
 	c := colly.NewCollector()
 	c.OnHTML("article.reference", func(h *colly.HTMLElement) {
 		var comp []string
+		// h2 is the config keyword
+		// TODO: workout how better to handle this if its not a single keyword but a sentance
 		kw := h.ChildText("h2.title")
+		// TODO: right now we create a string of all the keywords and args/vars
 		h.ForEach("p.figgroup", func(_ int, h *colly.HTMLElement) {
 			var t []string
 			h.ForEach("span.kwd", func(_ int, h *colly.HTMLElement) {
@@ -121,7 +100,7 @@ func parseSection(k keywords, url string) {
 			kwd := strings.Join(t, " ")
 			t = nil
 			h.ForEach("var", func(_ int, h *colly.HTMLElement) {
-				t = append(t, h.Text)
+				t = append(t, fmt.Sprintf("{{ %s }}", h.Text))
 			})
 			arg := strings.Join(t, " ")
 			if kwd != "" {
@@ -131,15 +110,13 @@ func parseSection(k keywords, url string) {
 					comp = append(comp, kwd)
 				}
 			}
-			if kwd == "alias" {
-				html, _ := h.DOM.Html()
-				slog.Info("debug", "tag", h.Name, "html", html)
-			}
 		})
+		// skip show commands
 		if strings.HasPrefix(kw, "show") {
+			slog.Debug("skipping show command", "keyword", kw)
 			return
 		}
-		k[kw] = comp
+		k = append(k, comp...)
 		slog.Debug("completion", kw, comp)
 	})
 	c.OnRequest(func(r *colly.Request) {
@@ -149,4 +126,31 @@ func parseSection(k keywords, url string) {
 		slog.Error("Failure", "URL", r.Request.URL, "Error", err)
 	})
 	c.Visit(url)
+	slog.Debug("ALL KEYWORDS", "kewords", k)
+	return k
 }
+
+var start = `
+package textdocument
+
+import (
+	"github.com/tliron/glsp"
+	protocol "github.com/tliron/lsp/protocol_3_16"
+)
+
+func Completion(ctx *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
+	var items []protocol.CompletionItem{
+`
+
+var block = `
+		protocol.Completion{
+			Label: "%s"
+			InsertText: "%s"
+		},
+`
+
+var end = `
+  }
+  return items, nil
+}
+`
