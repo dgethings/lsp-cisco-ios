@@ -1,20 +1,20 @@
-package main
+package server
 
 import (
-	"github.com/dgethings/lsp-cisco-ios/textdocument"
+	"github.com/dgethings/lsp-cisco-ios/lsp/textdocument"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/glsp/server"
 )
 
-const lsName = "lsp-cisco-ios"
+const lsName = "ios-lsp"
 
 var (
 	version string = "0.0.1"
 	handler protocol.Handler
 )
 
-func main() {
+func New() {
 	handler = protocol.Handler{
 		Initialize:             initialize,
 		Initialized:            initialized,
