@@ -1,5 +1,5 @@
 vim.lsp.start({
-	name = "lsp-cisco-ios",
-	cmd = { "./bin/lsp-cisco-ios" },
+	name = "IOS LSP",
+	cmd = { "ios-lsp" },
 	root_dir = vim.fn.getcwd(),
 })

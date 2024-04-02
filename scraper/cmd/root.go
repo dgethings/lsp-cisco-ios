@@ -25,7 +25,6 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Println("wrote completions.go")
 		return nil
 	},
 }
@@ -77,7 +76,7 @@ func getKeywords() error {
 	fmt.Println(start)
 	slog.Debug("COMPLETE LIST", "kw", keywords)
 	for _, k := range keywords {
-		fmt.Printf(block, k[0], k[1])
+		fmt.Printf(block, k[1])
 	}
 	fmt.Println(end)
 	return nil
@@ -130,24 +129,20 @@ func parseSection(url string) []string {
 	return k
 }
 
-var start = `
-package textdocument
+var start = `package textdocument
 
 import (
 	"github.com/tliron/glsp"
-	protocol "github.com/tliron/lsp/protocol_3_16"
+	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
 func Completion(ctx *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
-	var items []protocol.CompletionItem{
-`
+	var items = []protocol.CompletionItem{`
 
 var block = `
-		protocol.Completion{
-			Label: "%s"
-			InsertText: "%s"
-		},
-`
+		protocol.CompletionItem{
+			Label: "%s",
+		},`
 
 var end = `
   }

@@ -7,7 +7,7 @@ import (
 	"github.com/tliron/glsp/server"
 )
 
-const lsName = "lsp-cisco-ios"
+const lsName = "ios-lsp"
 
 var (
 	version string = "0.0.1"
