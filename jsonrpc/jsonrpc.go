@@ -40,3 +40,28 @@ func Decode(msg []byte) (string, []byte, error) {
 
 	return baseMessage.Method, content[:contentLength], nil
 }
+
+// The Split method needs to provide SplitFunc definition
+// type SplitFunc func(data []byte, atEOF bool) (advance int, token []byte, err error)
+func Split(data []byte, _ bool) (adv int, token []byte, err error) {
+	header, content, enough := bytes.Cut(data, []byte{'\r', '\n', '\r', '\n'})
+	// not an error, just don't have enough data yet
+	if !enough {
+		return 0, nil, nil
+	}
+
+	contentLengthBytes := header[len("Content-Length: "):]
+	contentLength, err := strconv.Atoi(string(contentLengthBytes))
+	// we expect to be able to get the content length now
+	if err != nil {
+		return 0, nil, err
+	}
+
+	// not an error, we have valid data just not all of it yet
+	if len(content) < contentLength {
+		return 0, nil, nil
+	}
+
+	totalLength := len(header) + 4 + contentLength
+	return totalLength, data[:totalLength], nil
+}
