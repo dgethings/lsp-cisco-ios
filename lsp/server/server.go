@@ -1,8 +1,11 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/dgethings/lsp-cisco-ios/lsp/textdocument"
 	"github.com/tliron/commonlog"
+	_ "github.com/tliron/commonlog/slog"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/glsp/server"
@@ -13,7 +16,7 @@ const lsName = "ios-lsp"
 var (
 	version string = "0.0.1"
 	handler protocol.Handler
-	path    string           = "lsp.log"
+	path    string           = "/tmp/lsp.log"
 	logger  commonlog.Logger = commonlog.GetLogger("")
 )
 
@@ -28,15 +31,13 @@ func New() {
 	}
 
 	server := server.NewServer(&handler, lsName, false)
-
-	logger.Info("starting server")
 	server.RunStdio()
 }
 
 func initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	capabilities := handler.CreateServerCapabilities()
-	logger.Infof("InitializeParams: %+v", params)
-	logger.Infof("InitializeCapabilities: %+v", capabilities)
+	logger.Info(fmt.Sprintf("InitializeParams: %+v", params))
+	logger.Info(fmt.Sprintf("InitializeCapabilities: %+v", capabilities))
 
 	return protocol.InitializeResult{
 		Capabilities: capabilities,
