@@ -28,6 +28,8 @@ func New() {
 		Shutdown:               shutdown,
 		SetTrace:               setTrace,
 		TextDocumentCompletion: textdocument.Completion,
+		TextDocumentDidOpen:    textdocument.DidOpen,
+		TextDocumentDidChange:  textdocument.DidChange,
 	}
 
 	server := server.NewServer(&handler, lsName, false)
@@ -36,8 +38,9 @@ func New() {
 
 func initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	capabilities := handler.CreateServerCapabilities()
-	logger.Info(fmt.Sprintf("InitializeParams: %+v", params))
-	logger.Info(fmt.Sprintf("InitializeCapabilities: %+v", capabilities))
+	logger.Infof("InitializeParams: %+v", params)
+	// logger.Infof("InitializeCapabilities: %+v", capabilities)
+	logger.Info("InitializeCapabilities", "TextDocumentSync", fmt.Sprintf("%s", capabilities.TextDocumentSync))
 
 	return protocol.InitializeResult{
 		Capabilities: capabilities,
@@ -49,11 +52,12 @@ func initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, erro
 }
 
 func initialized(ctx *glsp.Context, params *protocol.InitializedParams) error {
-	logger.Infof("InitializedParams: %+v", params)
+	logger.Info("Session initialized")
 	return nil
 }
 
 func shutdown(ctx *glsp.Context) error {
+	logger.Error("ios-lsp crashed")
 	protocol.SetTraceValue(protocol.TraceValueOff)
 	return nil
 }
