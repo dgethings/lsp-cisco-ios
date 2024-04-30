@@ -22,6 +22,10 @@ func Hover(ctx *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, er
 func selectedWord(f string, l uint, c uint) string {
 	line := strings.Split(f, "\n")
 	word := line[l]
+	// if the char is a space then return empty string
+	if string(line[l][c]) == " " {
+		return ""
+	}
 	// find the " " closest to the char index, that should be the start of the word
 	start := strings.LastIndex(line[l][:c], " ")
 	slog.Info("start", "index", start)
