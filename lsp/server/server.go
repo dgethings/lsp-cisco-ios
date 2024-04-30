@@ -30,6 +30,7 @@ func New() {
 		TextDocumentCompletion: textdocument.Completion,
 		TextDocumentDidOpen:    textdocument.DidOpen,
 		TextDocumentDidChange:  textdocument.DidChange,
+		TextDocumentHover:      textdocument.Hover,
 	}
 
 	server := server.NewServer(&handler, lsName, false)
