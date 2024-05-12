@@ -15,11 +15,15 @@ func TestSelectedWord(t *testing.T) {
 		charNum  uint
 	}
 	tests := []test{
-		{input: "enable password", linNum: 0, charNum: 0, expected: ios.EnablePassword},
+		{input: "enable password", linNum: 0, charNum: 1, expected: ios.EnablePassword},
+		{input: "enable secret", linNum: 0, charNum: 1, expected: ios.EnableSecret},
 	}
 
 	for _, tc := range tests {
-		actual := selectedWord(tc.input, tc.linNum, tc.charNum)
+		actual, err := selectedWord(tc.input, tc.linNum, tc.charNum)
+		if err != nil {
+			t.Fatal(err)
+		}
 		assert.Equal(t, tc.expected, actual)
 	}
 }
