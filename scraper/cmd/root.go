@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/gocolly/colly"
 	"github.com/spf13/cobra"
@@ -41,15 +40,43 @@ func Execute() {
 }
 
 func init() {
-	// slog.SetLogLoggerLevel(slog.LevelDebug)
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 }
 
 const url = "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fundamentals/command/cf_command_ref.html"
 
-var keywords []string
+var keywords []Keyword
+
+type Keyword struct {
+	Command     string
+	Description string
+	Syntax      string
+	Defaults    string
+	Mode        string
+	History     CommandHistory
+	Usage       UsageGuideline
+	Examples    Examples
+}
+
+type CommandHistory struct {
+	Release      string
+	Modification string
+}
+
+type UsageGuideline struct {
+	Preamble string
+	Note     string
+}
+
+type Examples struct {
+	Preamble string
+	Code     string
+}
 
 func getKeywords() error {
-	c := colly.NewCollector()
+	c := colly.NewCollector(
+		colly.CacheDir("./cache"),
+	)
 
 	c.OnHTML("ul#bookToc", func(h *colly.HTMLElement) {
 		// iterate through akk the "book" sections
@@ -57,7 +84,7 @@ func getKeywords() error {
 			// ignore the Introduction section, that doesn't contain any commands
 			if li.ChildText("a") != "Introduction" {
 				url := fmt.Sprintf("%s%s", "https://www.cisco.com", li.ChildAttr("a", "href"))
-				kw := parseSection(url)
+				kw := parseChapter(url)
 				if len(kw) > 0 {
 					keywords = append(keywords, kw...)
 				}
@@ -75,61 +102,40 @@ func getKeywords() error {
 
 	c.Visit(url)
 
-	fmt.Println(start)
-	// slog.Debug("COMPLETE LIST", "kw", keywords)
-	for _, k := range keywords {
-		fmt.Printf(block, k)
-	}
-	fmt.Println(end)
+	// fmt.Println(start)
+	// for _, k := range keywords {
+	// 	fmt.Printf(block, k)
+	// }
+	// fmt.Println(end)
 	return nil
 }
 
-func parseSection(url string) []string {
-	var k []string
+// var regex, err = regexp.Compile("[[space]]+")
+var regex, err = regexp.Compile(`\s+`)
+
+func trim(s string) string {
+	return regex.ReplaceAllString(s, " ")
+}
+
+func parseChapter(url string) []Keyword {
+	var ks []Keyword
 	c := colly.NewCollector()
-	c.OnHTML("article.reference", func(h *colly.HTMLElement) {
-		// var comp []string
-		// h2 is the config keyword
-		// TODO: workout how better to handle this if its not a single keyword but a sentance
-		// kw := h.ChildText("h2.title")
-		// TODO: right now we create a string of all the keywords and args/vars
-		h.ForEach("p.figgroup", func(_ int, h *colly.HTMLElement) {
-			t := h.Text
-			// clear up extra spaces and new lines, usually at the end of the line
-			t = strings.TrimSpace(t)
-			// clear up remaining spaces and new lines
-			regex, _ := regexp.Compile("[[:space:]]+")
-			t = regex.ReplaceAllString(t, " ")
-			slog.Debug("COMPLETION", "string", t)
-			// show commands are not part of the config
-			if !strings.HasPrefix(t, "show") {
-				k = append(k, strings.TrimSpace(t))
-			}
-			// var t []string
-			// h.ForEach("span.kwd", func(_ int, h *colly.HTMLElement) {
-			// 	t = append(t, h.Text)
-			// })
-			// kwd := strings.Join(t, " ")
-			// t = nil
-			// h.ForEach("var", func(_ int, h *colly.HTMLElement) {
-			// 	t = append(t, fmt.Sprintf("{{ %s }}", h.Text))
-			// })
-			// arg := strings.Join(t, " ")
-			// if kwd != "" {
-			// 	if arg != "" {
-			// 		comp = append(comp, fmt.Sprintf("%s %s", kwd, arg))
-			// 	} else {
-			// 		comp = append(comp, kwd)
-			// 	}
-			// }
+	c.OnHTML(("div#chapterContent"), func(h *colly.HTMLElement) {
+		h.ForEach("article.reference", func(_ int, e *colly.HTMLElement) {
+			var k Keyword
+			k.Command = e.ChildText("h2.title")
+			k.Description = trim(e.ChildText("section.section:not('refsyn')"))
+			k.Syntax = e.ChildText("section.refsyn")
+			k.Defaults = trim(e.ChildText("section.command_default > p"))
+			k.Mode = trim(e.ChildText("section.command_modes > p"))
+			k.History.Release = e.ChildText("section.command_history > td.entry :first-child")
+			k.History.Modification = e.ChildText("section.command_history > td.entry :nth-child(2)")
+			k.Usage.Preamble = trim(e.ChildText("section.usage_guidelines > :not(h3.sectiontitle) "))
+			k.Usage.Note = e.ChildText("section.note__content")
+			k.Examples.Preamble = trim(e.ChildText("section.command_examples > p"))
+			k.Examples.Code = e.ChildText("section.command_examples > pre.codeblock")
+			ks = append(ks, k)
 		})
-		// skip show commands
-		// if strings.HasPrefix(kw, "show") {
-		// 	slog.Debug("skipping show command", "keyword", kw)
-		// 	return
-		// }
-		// k = append(k, comp...)
-		// slog.Debug("completion", kw, comp)
 	})
 	c.OnRequest(func(r *colly.Request) {
 		slog.Debug("Vist", "URL", r.URL)
@@ -138,11 +144,11 @@ func parseSection(url string) []string {
 		slog.Error("Failure", "URL", r.Request.URL, "Error", err)
 	})
 	c.Visit(url)
-	slog.Debug("SECTION KEYWORDS", "count", len(k))
-	if len(k) > 0 {
-		slog.Debug("SECTION KEYWORDS", "example", k[0])
+	slog.Debug("SECTION KEYWORDS", "count", len(ks))
+	if len(ks) > 0 {
+		slog.Debug("SECTION KEYWORDS", "example", ks[0])
 	}
-	return k
+	return ks
 }
 
 var start = `package textdocument
