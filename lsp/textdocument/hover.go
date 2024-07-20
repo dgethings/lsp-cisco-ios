@@ -14,7 +14,11 @@ import (
 func Hover(ctx *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
 	slog.Info("Hover", "params", params)
 	h := protocol.Hover{}
-	word, err := selectedWord(State[params.TextDocument.URI], uint(params.Position.Line), uint(params.Position.Character))
+	word, err := selectedWord(
+		State[params.TextDocument.URI],
+		uint(params.Position.Line),
+		uint(params.Position.Character),
+	)
 	if err != nil {
 		return &h, err
 	}
