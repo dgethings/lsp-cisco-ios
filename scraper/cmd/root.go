@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"os"
 	"regexp"
+	"strings"
+	"text/template"
 
 	"github.com/gocolly/colly"
 	"github.com/spf13/cobra"
@@ -21,7 +23,17 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := getKeywords()
+		kws, err := getKeywords()
+		if err != nil {
+			return err
+		}
+
+		tmplFile := "keywords.tmpl"
+		tmpl, err := template.New(tmplFile).ParseFiles(tmplFile)
+		if err != nil {
+			return err
+		}
+		err = tmpl.Execute(os.Stdout, kws)
 		if err != nil {
 			return err
 		}
@@ -32,7 +44,7 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	// slog.SetLogLoggerLevel(slog.LevelDebug)
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
@@ -73,7 +85,7 @@ type Examples struct {
 	Code     string
 }
 
-func getKeywords() error {
+func getKeywords() ([]Keyword, error) {
 	c := colly.NewCollector(
 		colly.CacheDir("./cache"),
 	)
@@ -107,11 +119,10 @@ func getKeywords() error {
 	// 	fmt.Printf(block, k)
 	// }
 	// fmt.Println(end)
-	return nil
+	return keywords, nil
 }
 
-// var regex, err = regexp.Compile("[[space]]+")
-var regex, err = regexp.Compile(`\s+`)
+var regex, err = regexp.Compile(`[[:space:]]+`)
 
 func trim(s string) string {
 	return regex.ReplaceAllString(s, " ")
@@ -123,9 +134,9 @@ func parseChapter(url string) []Keyword {
 	c.OnHTML(("div#chapterContent"), func(h *colly.HTMLElement) {
 		h.ForEach("article.reference", func(_ int, e *colly.HTMLElement) {
 			var k Keyword
-			k.Command = e.ChildText("h2.title")
+			k.Command = trim(e.ChildText("h2.title"))
 			k.Description = trim(e.ChildText("section.section:not('refsyn')"))
-			k.Syntax = e.ChildText("section.refsyn")
+			k.Syntax = trim(e.ChildText("section.refsyn"))
 			k.Defaults = trim(e.ChildText("section.command_default > p"))
 			k.Mode = trim(e.ChildText("section.command_modes > p"))
 			k.History.Release = e.ChildText("section.command_history > td.entry :first-child")
@@ -135,6 +146,9 @@ func parseChapter(url string) []Keyword {
 			k.Examples.Preamble = trim(e.ChildText("section.command_examples > p"))
 			k.Examples.Code = e.ChildText("section.command_examples > pre.codeblock")
 			ks = append(ks, k)
+			if strings.Contains(k.Command, "service counters") {
+				slog.Debug("FIND", "cmd", k.Command)
+			}
 		})
 	})
 	c.OnRequest(func(r *colly.Request) {

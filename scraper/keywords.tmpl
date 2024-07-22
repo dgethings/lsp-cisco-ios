@@ -1,0 +1,46 @@
+package ios
+
+import protocol "github.com/tliron/glsp/protocol_3_16"
+
+type Keyword struct {
+	Keyword       string
+	Documentation string
+	Insert        string
+}
+
+func NewKeyword(k string, d string, i string) Keyword {
+	return Keyword{Keyword: k, Documentation: d, Insert: i}
+}
+
+func (k *Keyword) Completion() protocol.CompletionItem {
+	kind := protocol.CompletionItemKindKeyword
+	format := protocol.InsertTextFormatSnippet
+	c := protocol.CompletionItem{
+		Label: k.Keyword,
+		Documentation: protocol.MarkupContent{
+			Kind:  protocol.MarkupKindMarkdown,
+			Value: k.Documentation,
+		},
+	}
+	c.InsertText = &k.Insert
+	c.Kind = &kind
+	c.InsertTextFormat = &format
+	return c
+}
+
+func Keywords() map[string]Keyword {
+	k := make(map[string]Keyword)
+  {{ range . -}}
+	k["{{ .Command }}"] = NewKeyword("{{ .Command }}", "{{ .Description }}", "{{ .Syntax }}")
+  {{ end }}
+  return k
+}
+
+func Completions() []protocol.CompletionItem {
+  var c []protocol.CompletionItem
+  for _, k := range Keywords() {
+    c = append(c, k.Completion())
+  }
+  return c
+}
+

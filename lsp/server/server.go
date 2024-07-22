@@ -33,15 +33,14 @@ func New() {
 		TextDocumentHover:      textdocument.Hover,
 	}
 
-	server := server.NewServer(&handler, lsName, false)
+	server := server.NewServer(&handler, lsName, true)
 	server.RunStdio()
 }
 
 func initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	capabilities := handler.CreateServerCapabilities()
-	logger.Infof("InitializeParams: %+v", params)
-	// logger.Infof("InitializeCapabilities: %+v", capabilities)
-	logger.Info("InitializeCapabilities", "TextDocumentSync", fmt.Sprintf("%s", capabilities.TextDocumentSync))
+	logger.Debugf("InitializeParams: %+v", params)
+	logger.Debug("InitializeCapabilities", "TextDocumentSync", fmt.Sprintf("%v", capabilities.TextDocumentSync))
 
 	return protocol.InitializeResult{
 		Capabilities: capabilities,
@@ -53,7 +52,7 @@ func initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, erro
 }
 
 func initialized(ctx *glsp.Context, params *protocol.InitializedParams) error {
-	logger.Info("Session initialized")
+	logger.Debug("Session initialized")
 	return nil
 }
 

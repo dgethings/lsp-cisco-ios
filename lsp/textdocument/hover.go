@@ -3,7 +3,6 @@ package textdocument
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/dgethings/lsp-cisco-ios/lsp/ios"
@@ -12,7 +11,6 @@ import (
 )
 
 func Hover(ctx *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
-	slog.Info("Hover", "params", params)
 	h := protocol.Hover{}
 	word, err := selectedWord(
 		State[params.TextDocument.URI],
@@ -36,7 +34,6 @@ func selectedWord(contents string, lineNum uint, colNum uint) (ios.Keyword, erro
 	keywords := getKeyword(word)
 	count := 100
 	for len(keywords) > 1 {
-		slog.Info("more than one matching keyword", "len", len(keywords))
 		count--
 		if count == 0 {
 			return ios.Keyword{}, errors.New("failed to find unique keyword after 100 tries")
@@ -47,17 +44,14 @@ func selectedWord(contents string, lineNum uint, colNum uint) (ios.Keyword, erro
 			return ios.Keyword{}, errors.New(msg)
 		}
 		nextWord := getSelectedWord(line, newColNum)
-		slog.Info("next word", "word", nextWord)
 		word = fmt.Sprintf("%s %s", word, nextWord)
 		keywords = getKeyword(word)
-		slog.Info("new keywords", "keywords", keywords)
 	}
 	return keywords[0], nil
 }
 
 func nextSpaceIndex(line string, colNum uint) uint {
 	idx := strings.Index(line[colNum:], " ")
-	slog.Info("space index", "num", idx)
 	if idx == -1 {
 		return colNum
 	}
@@ -82,9 +76,7 @@ func getKeyword(word string) []ios.Keyword {
 func getSelectedWord(line string, colNum uint) string {
 	var word string
 	start := strings.LastIndex(line[:colNum], " ")
-	slog.Info("index", "start", start)
 	end := strings.Index(line[colNum+1:], " ")
-	slog.Info("index", "end", end)
 	// there are no spaces in the line so return the line
 	if start == -1 && end == -1 {
 		word = line
@@ -101,6 +93,5 @@ func getSelectedWord(line string, colNum uint) string {
 	if start > 0 && end == -1 {
 		word = line[int(start)+1:]
 	}
-	slog.Info("found word", "word", word)
 	return word
 }
