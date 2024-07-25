@@ -2,7 +2,7 @@ vim.filetype.add({
 	pattern = { ["ios.*j2"] = "IOS-JINJA" },
 })
 local client = vim.lsp.start_client({
-	cmd = { "/Users/dgethings/git/lsp-cisco-ios/lsp/ios-lsp" },
+	cmd = { "ios-lsp" },
 	name = "iosLSP",
 	root_dir = vim.fn.getcwd(),
 })
