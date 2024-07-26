@@ -105,7 +105,7 @@ func contentAtLine(contents string, lineNum int) string {
 		return ""
 	}
 	logger.Debugf("Matching-Line %s", lines[lineNum])
-	return lines[lineNum]
+	return lines[lineNum-1]
 }
 
 func getKeyword(word string) []ios.Keyword {

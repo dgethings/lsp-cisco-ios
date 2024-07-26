@@ -58,6 +58,24 @@ func TestNextSpaceIndex(t *testing.T) {
 	}
 }
 
+func TestContentAtLine(t *testing.T) {
+	tests := []struct {
+		contents string
+		lineNum  int
+		expected string
+	}{
+		{"a b c\n", 1, "a b c"},
+		{"a\nb\nc\n", 1, "a"},
+		{"a\nb\nc\n", 2, "b"},
+		{"a\nb\nc\n", 3, "c"},
+	}
+
+	for _, tc := range tests {
+		actual := contentAtLine(tc.contents, tc.lineNum)
+		assert.Equal(t, tc.expected, actual, "contents: %s", tc.contents)
+	}
+}
+
 var params = new(protocol.HoverParams)
 
 func TestHover(t *testing.T) {
