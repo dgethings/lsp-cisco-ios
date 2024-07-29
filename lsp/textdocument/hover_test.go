@@ -10,6 +10,12 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
+var (
+	a     = ios.NewKeyword("a", "a", "a")
+	a_b   = ios.NewKeyword("a b", "a b", "a b")
+	a_b_c = ios.NewKeyword("a b c", "a b c", "a b c")
+)
+
 func TestLongestMatch(t *testing.T) {
 	tests := []struct {
 		line     string
@@ -18,17 +24,17 @@ func TestLongestMatch(t *testing.T) {
 	}{
 		{
 			"a",
-			[]ios.Keyword{ios.NewKeyword("a", "a", "a"), ios.NewKeyword("a b", "a b", "a b"), ios.NewKeyword("a b c", "a b c", "a b c")},
+			[]ios.Keyword{a, a_b, a_b_c},
 			ios.NewKeyword("a", "a", "a"),
 		},
 		{
 			"a b",
-			[]ios.Keyword{ios.NewKeyword("a", "a", "a"), ios.NewKeyword("a b", "a b", "a b"), ios.NewKeyword("a b c", "a b c", "a b c")},
+			[]ios.Keyword{a, a_b, a_b_c},
 			ios.NewKeyword("a b", "a b", "a b"),
 		},
 		{
 			"a b c",
-			[]ios.Keyword{ios.NewKeyword("a", "a", "a"), ios.NewKeyword("a b", "a b", "a b"), ios.NewKeyword("a b c", "a b c", "a b c")},
+			[]ios.Keyword{a, a_b, a_b_c},
 			ios.NewKeyword("a b c", "a b c", "a b c"),
 		},
 	}
@@ -73,6 +79,23 @@ func TestContentAtLine(t *testing.T) {
 	for _, tc := range tests {
 		actual := contentAtLine(tc.contents, tc.lineNum)
 		assert.Equal(t, tc.expected, actual, "contents: %s", tc.contents)
+	}
+}
+
+func TestGetKeyword(t *testing.T) {
+	type test struct {
+		word string
+	}
+	tests := []test{}
+	for s := range ios.Keywords() {
+		tests = append(tests, test{s})
+	}
+
+	for _, tc := range tests {
+		actual := getKeyword(tc.word)
+		if len(actual) == 0 {
+			t.Errorf("%s did not match any keywords", tc.word)
+		}
 	}
 }
 
