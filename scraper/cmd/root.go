@@ -114,11 +114,6 @@ func getKeywords() ([]Keyword, error) {
 
 	c.Visit(url)
 
-	// fmt.Println(start)
-	// for _, k := range keywords {
-	// 	fmt.Printf(block, k)
-	// }
-	// fmt.Println(end)
 	return keywords, nil
 }
 
@@ -137,7 +132,7 @@ func parseChapter(url string) []Keyword {
 		h.ForEach("article.reference", func(_ int, e *colly.HTMLElement) {
 			var k Keyword
 			k.Command = trim(e.ChildText("h2.title"))
-			k.Description = trim(e.ChildText("section.section:not('refsyn')"))
+			k.Description = template.JSEscapeString(trim(e.ChildText("section.section > p.p")))
 			k.Syntax = trim(e.ChildText("section.refsyn"))
 			k.Defaults = trim(e.ChildText("section.command_default > p"))
 			k.Mode = trim(e.ChildText("section.command_modes > p"))

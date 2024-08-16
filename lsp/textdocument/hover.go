@@ -15,10 +15,13 @@ func Hover(ctx *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, er
 		int(params.Position.Line),
 		int(params.Position.Character),
 	)
+	logger.Debugf("Selected-Keyword %s", word.Keyword)
 	if err != nil {
+		logger.Debugf("Selected-Keyword-Error %v", err)
 		return &h, err
 	}
 	h.Contents = word.Documentation
+	logger.Debugf("Selected-Keyword-Documentation %s", h.Contents)
 	return &h, nil
 }
 
@@ -68,6 +71,7 @@ func selectedWord(contents string, lineNum int, colNum int) (ios.Keyword, error)
 	// return ios.Keyword{}, nil
 }
 
+// find the keyword that matches the line with the maximum number of matching chars
 func longestMatch(line string, keywords []ios.Keyword) ios.Keyword {
 	matchIdx := 0
 	maxCount := 0
@@ -87,6 +91,7 @@ func longestMatch(line string, keywords []ios.Keyword) ios.Keyword {
 			matchIdx = i
 		}
 	}
+	logger.Debugf("Matching-Keyword %s", keywords[matchIdx].Keyword)
 	return keywords[matchIdx]
 }
 
@@ -100,12 +105,11 @@ func nextSpaceIndex(line string, colNum int) int {
 
 func contentAtLine(contents string, lineNum int) string {
 	lines := strings.Split(contents, "\n")
-	logger.Debug("contentAtLine", "lines", len(lines), "lineNum", lineNum)
 	if lineNum > len(lines) {
 		return ""
 	}
 	logger.Debugf("Matching-Line %s", lines[lineNum])
-	return lines[lineNum-1]
+	return lines[lineNum]
 }
 
 func getKeyword(word string) []ios.Keyword {
