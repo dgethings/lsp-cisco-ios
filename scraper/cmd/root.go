@@ -114,17 +114,14 @@ func getKeywords() ([]Keyword, error) {
 
 	c.Visit(url)
 
-	// fmt.Println(start)
-	// for _, k := range keywords {
-	// 	fmt.Printf(block, k)
-	// }
-	// fmt.Println(end)
 	return keywords, nil
 }
 
-var regex, err = regexp.Compile(`[[:space:]]+`)
-
 func trim(s string) string {
+	regex, err := regexp.Compile(`[[:space:]]+`)
+	if err != nil {
+		slog.Error(fmt.Sprintf("Could not create regex: %v", err))
+	}
 	return regex.ReplaceAllString(s, " ")
 }
 
@@ -135,7 +132,7 @@ func parseChapter(url string) []Keyword {
 		h.ForEach("article.reference", func(_ int, e *colly.HTMLElement) {
 			var k Keyword
 			k.Command = trim(e.ChildText("h2.title"))
-			k.Description = trim(e.ChildText("section.section:not('refsyn')"))
+			k.Description = template.JSEscapeString(trim(e.ChildText("section.section > p.p")))
 			k.Syntax = trim(e.ChildText("section.refsyn"))
 			k.Defaults = trim(e.ChildText("section.command_default > p"))
 			k.Mode = trim(e.ChildText("section.command_modes > p"))
@@ -145,9 +142,8 @@ func parseChapter(url string) []Keyword {
 			k.Usage.Note = e.ChildText("section.note__content")
 			k.Examples.Preamble = trim(e.ChildText("section.command_examples > p"))
 			k.Examples.Code = e.ChildText("section.command_examples > pre.codeblock")
-			ks = append(ks, k)
-			if strings.Contains(k.Command, "service counters") {
-				slog.Debug("FIND", "cmd", k.Command)
+			if strings.Contains(k.Mode, "config") {
+				ks = append(ks, k)
 			}
 		})
 	})
@@ -164,24 +160,3 @@ func parseChapter(url string) []Keyword {
 	}
 	return ks
 }
-
-var start = `package textdocument
-
-import (
-	"github.com/tliron/glsp"
-	protocol "github.com/tliron/glsp/protocol_3_16"
-)
-
-func Completion(ctx *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
-	var items = []protocol.CompletionItem{`
-
-var block = `
-		{
-			Label: "%s",
-		},`
-
-var end = `
-  }
-  return items, nil
-}
-`
