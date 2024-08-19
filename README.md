@@ -1,14 +1,7 @@
-# lsp-cisco-ios
+# Language Server for Cisco IOS Configuration
 
-Language Server for Cisco IOS
+Language Server for Cisco IOS is an [LSP]() for Cisco IOS configuration. It is to be used with editors like VSCode or NeoVIM that support the Langurage Server Protocol defined by Microsoft.
 
-## Dev
+This app is at Alpha stage meaning it has very limited functionality and requires developer expertise to get working. As this app matures these issues will be addressed making much more user friendly.
 
-To enable debugging set the last param to `true` in `server.go`.
-
-To apply to the LSP to the file run the following vim commands
-
-```vim
-source nvim.lua
-setfiletype IOS-JINJA
-```
+The target audience, eventually, is Network Engineers tasked with creating and maintaining network configurations.
