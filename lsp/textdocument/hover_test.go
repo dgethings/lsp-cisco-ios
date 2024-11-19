@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	a     = ios.NewKeyword("a", "a", "a")
-	a_b   = ios.NewKeyword("a b", "a b", "a b")
-	a_b_c = ios.NewKeyword("a b c", "a b c", "a b c")
+	a     = ios.NewKeyword("a", "a", "a", "a")
+	a_b   = ios.NewKeyword("a b", "a b", "a b", "a b")
+	a_b_c = ios.NewKeyword("a b c", "a b c", "a b c", "a b c")
 )
 
 func TestLongestMatch(t *testing.T) {
@@ -25,17 +25,17 @@ func TestLongestMatch(t *testing.T) {
 		{
 			"a",
 			[]ios.Keyword{a, a_b, a_b_c},
-			ios.NewKeyword("a", "a", "a"),
+			ios.NewKeyword("a", "a", "a", "a"),
 		},
 		{
 			"a b",
 			[]ios.Keyword{a, a_b, a_b_c},
-			ios.NewKeyword("a b", "a b", "a b"),
+			ios.NewKeyword("a b", "a b", "a b", "a b"),
 		},
 		{
 			"a b c",
 			[]ios.Keyword{a, a_b, a_b_c},
-			ios.NewKeyword("a b c", "a b c", "a b c"),
+			ios.NewKeyword("a b c", "a b c", "a b c", "a b c"),
 		},
 	}
 
