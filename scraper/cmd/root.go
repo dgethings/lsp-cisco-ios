@@ -125,6 +125,49 @@ func trim(s string) string {
 	return regex.ReplaceAllString(s, " ")
 }
 
+func setMode(s string) (string, error) {
+	if strings.Contains(s, "Interface configuration Frame Relay DLCI configuration Template") {
+		return "(config-template)", nil
+	}
+	if strings.Contains(s, "Global Configuration") {
+		return "(config)", nil
+	}
+	if strings.Contains(s, "Global configuration") {
+		return "(config)", nil
+	}
+	if strings.Contains(s, "Interface configuration") {
+		return "(config-if)", nil
+	}
+	if strings.Contains(s, "Archive configuration") {
+		return "(config-archive)", nil
+	}
+	if strings.Contains(s, "Archive config mode") {
+		return "(config-archive-log-cfg)", nil
+	}
+	if strings.Contains(s, "Configuration change logger configuration") {
+		return "(config-archive-log-config)", nil
+	}
+	if strings.Contains(s, "Line configuration") {
+		return "(config-line)", nil
+	}
+	if strings.Contains(s, "MST configuration") {
+		return "(config-mst)", nil
+	}
+	if strings.Contains(s, "Redundancy configuration") {
+		return "(config-red)", nil
+	}
+	if strings.Contains(s, "Main CPU redundancy configuration") {
+		return "(config-r-mc)", nil
+	}
+	if strings.Contains(s, "Time-range configuration") {
+		return "(config-time-range)", nil
+	}
+	if strings.Contains(s, "log config (configuration-change logger) submode") {
+		return "(config-archive-log-cfg)", nil
+	}
+	return "", fmt.Errorf("Unrecognised mode: %s", s)
+}
+
 func parseChapter(url string) []Keyword {
 	var ks []Keyword
 	c := colly.NewCollector()
@@ -132,10 +175,17 @@ func parseChapter(url string) []Keyword {
 		h.ForEach("article.reference", func(_ int, e *colly.HTMLElement) {
 			var k Keyword
 			k.Command = trim(e.ChildText("h2.title"))
-			k.Description = template.JSEscapeString(trim(e.ChildText("section.section > p.p")))
+			descr := trim(e.ChildText("section.section > p.p"))
+			slog.Debug("DESCR", "PREFORMAT", descr)
+			k.Description = template.JSEscapeString(descr)
+			slog.Debug("DESCR", "POSTFORMAT", k.Description)
 			k.Syntax = trim(e.ChildText("section.refsyn"))
 			k.Defaults = trim(e.ChildText("section.command_default > p"))
-			k.Mode = trim(e.ChildText("section.command_modes > p"))
+			mode, err := setMode(trim(e.ChildText("section.command_modes > p")))
+			if err != nil {
+				slog.Error("ModeParse", "UNKNOWN", k.Command)
+			}
+			k.Mode = mode
 			k.History.Release = e.ChildText("section.command_history > td.entry :first-child")
 			k.History.Modification = e.ChildText("section.command_history > td.entry :nth-child(2)")
 			k.Usage.Preamble = trim(e.ChildText("section.usage_guidelines > :not(h3.sectiontitle) "))

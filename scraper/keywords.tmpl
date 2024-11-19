@@ -6,10 +6,11 @@ type Keyword struct {
 	Keyword       string
 	Documentation string
 	Insert        string
+  Mode          string
 }
 
-func NewKeyword(k string, d string, i string) Keyword {
-	return Keyword{Keyword: k, Documentation: d, Insert: i}
+func NewKeyword(k string, d string, i string, m string) Keyword {
+	return Keyword{Keyword: k, Documentation: d, Insert: i, Mode: m}
 }
 
 func (k *Keyword) Completion() protocol.CompletionItem {
@@ -29,9 +30,9 @@ func (k *Keyword) Completion() protocol.CompletionItem {
 }
 
 func Keywords() map[string]Keyword {
-	k := make(map[string]Keyword)
+  k := make(map[string]Keyword)
   {{ range . -}}
-	k["{{ .Command }}"] = NewKeyword("{{ .Command }}", "{{ .Description }}", "{{ .Syntax }}")
+	k["{{ .Command }}"] = NewKeyword("{{ .Command }}", "{{ .Description }}", "{{ .Syntax }}", "{{ .Mode }}")
   {{ end }}
   return k
 }
@@ -43,4 +44,3 @@ func Completions() []protocol.CompletionItem {
   }
   return c
 }
-
