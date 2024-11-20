@@ -1,6 +1,7 @@
 package textdocument
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/dgethings/lsp-cisco-ios/lsp/ios"
@@ -8,9 +9,12 @@ import (
 
 // Finds the word surrounding the given line and char number
 func selectedWord(contents string, lineNum int, colNum int) (ios.Keyword, error) {
-	logger.Debug("params", "line", lineNum, "column", colNum)
-	line := contentAtLine(contents, lineNum)
-	logger.Debugf("Line-Content %s", line)
+	logger.Debug("PARAMS", "line", lineNum, "column", colNum)
+	line, err := contentAtLine(contents, lineNum)
+	if err != nil {
+		return ios.Keyword{}, err
+	}
+	logger.Debug("LINE", "Content", line)
 	if colNum > len(line) {
 		return ios.Keyword{}, nil
 	}
@@ -84,15 +88,15 @@ func nextSpaceIndex(line string, colNum int) int {
 	return colNum + idx + 1
 }
 
-func contentAtLine(contents string, lineNum int) string {
-	// lines := strings.Split(contents, "\n")
-	logger.Debug("Line", "given", lineNum)
-	return ""
-	// if lineNum > len(lines) {
-	// 	return ""
-	// }
-	// logger.Debugf("Line %s", "matching", lines[lineNum])
-	// return lines[lineNum]
+func contentAtLine(contents string, lineNum int) (string, error) {
+	lines := strings.Split(contents, "\n")
+	logger.Debug("LINE", "file-contents", contents)
+	logger.Debug("LINE", "given", lineNum)
+	if lineNum >= len(lines) {
+		return "", errors.New("requested line number greater than lines in file")
+	}
+	// logger.Debug("LINE", "matching", lines[lineNum])
+	return lines[lineNum-1], nil
 }
 
 func getKeyword(word string) []ios.Keyword {

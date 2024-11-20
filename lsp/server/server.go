@@ -39,8 +39,11 @@ func New() {
 
 func initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	capabilities := handler.CreateServerCapabilities()
+	yes := true
+	full := protocol.TextDocumentSyncKindFull
+	capabilities.TextDocumentSync = protocol.TextDocumentSyncOptions{OpenClose: &yes, Change: &full}
 	logger.Debugf("InitializeParams: %+v", params)
-	logger.Debug("InitializeCapabilities", "TextDocumentSync", fmt.Sprintf("%v", capabilities.TextDocumentSync))
+	logger.Debug("InitializeCapabilities", "TextDocumentSync", fmt.Sprintf("%+v", capabilities.TextDocumentSync))
 
 	return protocol.InitializeResult{
 		Capabilities: capabilities,

@@ -6,9 +6,11 @@ import (
 )
 
 func DidChange(ctx *glsp.Context, params *protocol.DidChangeTextDocumentParams) error {
-	logger.Info("DidChange", "params", params)
+	logger.Debug("DidChange", "params", params)
+	logger.Debug("DidChange", "file", params.TextDocument.URI, "contents", State[params.TextDocument.URI])
 	for _, change := range params.ContentChanges {
-		State[params.TextDocument.URI] = change.(protocol.TextDocumentContentChangeEvent).Text
+		State[params.TextDocument.URI] = change.(protocol.TextDocumentContentChangeEventWhole).Text
 	}
+	logger.Debug("DidChange", "file", params.TextDocument.URI, "contents", State[params.TextDocument.URI])
 	return nil
 }
