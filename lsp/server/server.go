@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	"github.com/dgethings/lsp-cisco-ios/lsp/textdocument"
 	"github.com/tliron/commonlog"
@@ -21,6 +22,12 @@ var (
 )
 
 func New() {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Errorf("recovered in f: %v", r)
+			logger.Errorf("stacktrace from panic: \n" + string(debug.Stack()))
+		}
+	}()
 	commonlog.Configure(2, &path)
 	handler = protocol.Handler{
 		Initialize:             initialize,

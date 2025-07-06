@@ -6,10 +6,11 @@ type Keyword struct {
 	Keyword       string
 	Documentation string
 	Insert        string
+	Children      []Keyword
 }
 
 func NewKeyword(k string, d string, i string) Keyword {
-	return Keyword{Keyword: k, Documentation: d, Insert: i}
+	return Keyword{Keyword: k, Documentation: d, Insert: i, Children: []Keyword{}}
 }
 
 func (k *Keyword) Completion() protocol.CompletionItem {
@@ -73,9 +74,17 @@ func Keywords() map[string]Keyword {
 	k["do"] = NewKeyword("do", "To execute user EXEC or privileged EXEC commands from global configuration mode or other configuration modes or submodes, use the do command in any configuration mode. A user EXEC or privileged EXEC command is not executed from a configuration mode. All configuration modes Use this command to execute user EXEC or privileged EXEC commands (such as show , clear , and debug commands) while configuring your routing device. After the EXEC command is executed, the system will return to the configuration mode you were using. You cannot use the do command to execute the configure terminal c ommand because entering the configure terminal command changes the user EXEC mode or privileged EXEC mode to the global configuration mode. You cannot use the do command to execute copy or write c ommands in the global configuration or any other configuration mode or submode.", "do command")
 	k["downward-compatible-config"] = NewKeyword("downward-compatible-config", "To generate a configuration that is compatible with an earlier Cisco IOS release, use the downward-compatible-config command in global configuration mode. To disable this function, use the no form of this command. The configuration is not compatible with earlier Cisco IOS releases. Global configuration (config) In Cisco IOS Release 10.3, IP access lists changed format. Use the downward-compatible-config command to regenerate a configuration in a format prior to Release 10.3 if you will downgrade from your software version to version 10.2 or 10.3. The earliest version value this command accepts is 10.2. When this command is configured, the router attempts to generate a configuration that is compatible with the specified version. Note that this command affects only IP access lists. Under some circumstances, the software might not be able to generate a fully backward-compatible configuration. In such a case, the software issues a warning message.", "downward-compatible-config version no downward-compatible-config")
 	k["editing"] = NewKeyword("editing", "To reen able Cisco IOS enhanced editing features for a particular line after they have been disabled, use the editing command in line configuration mode. To disable these features, use the no form of this command. This command has no arguments or keywords. Enabled Line configuration Enhanced editing features are enabled by default. However, there may be situations in which you need to disable these features. The no form of this command disables these enhanced editing features, and the plain form of the command can be used to reenable these features. The table below provides a description of the keys used to enter and edit commands when the editing features are enabled. Ctrl indicates the Control key, which must be pressed simultaneously with its associated letter key. Esc indicates the Escape key, which must be pressed first, followed by its associated letter key. A comma is used in the following table to indicate a key sequence (the comma key should not be pressed). Keys are not case sensitive. Many letters used for CLI navigation and editing were chosen to provide an easy way of remembering their functions. In the following table, characters are bolded in the “Function Summary” column to indicate the relation between the letter used and the function.", "editing no editing")
-	k["enable last-resort"] = NewKeyword("enable last-resort", "To enable password parameters as the last resort without specifying the local enable password if no TACACS servers respond, use the enable last-resort command in global configuration mode. To disable the password parameters, use the no form of this command. The password parameters for the router are not enabled. Global configuration (config)", "no enable last-resort {password | succeed} no enable last-resort")
-	k["enable password"] = NewKeyword("enable password", "To set a local password to control access to various privilege levels", "enable password")
-	k["enable secret"] = NewKeyword("enable secret", "To specify an additional layer of security over the enable password command", "enable secret")
+	k["enable"] = Keyword{
+		Keyword: "enable",
+		Documentation: "Enable special command",
+		Insert: "enable",
+		Children: []Keyword{
+			{Keyword: "last-resort", Documentation: "To enable password parameters as the last resort without specifying the local enable password if no TACACS servers respond, use the enable last-resort command in global configuration mode. To disable the password parameters, use the no form of this command. The password parameters for the router are not enabled. Global configuration (config)", Insert: "last-resort"},
+			{Keyword: "password", Documentation: "To set a local password to control access to various privilege levels", Insert: "password"},
+			{Keyword: "secret", Documentation: "To specify an additional layer of security over the enable password command", Insert: "secret"},
+		},
+	}
+	
 	k["end"] = NewKeyword("end", "To en d the current configuration session and return to privileged EXEC mode, use the end command in global configuration mode. This command has no arguments or keywords. No default behavior or values. Global configuration This command will bring you back to privileged EXEC mode regardless of what configuration mode or configuration submode you are in. Use this command when you are done configuring the system and you want to return to EXEC mode to perform verification steps.", "end")
 	k["environment-monitor shutdown temperature"] = NewKeyword("environment-monitor shutdown temperature", "To enable monitoring of the environment sensors, use the environment-monitor shutdown temperature command in global configuration mode. To disable monitoring of the environment sensors, use the no form of this command. By default, rommon is enabled. Global configuration", "environment-monitor shutdown temperature [rommon | powerdown] no environment-monitor shutdown temperature [rommon | powerdown]")
 	k["environment temperature-controlled"] = NewKeyword("environment temperature-controlled", "To enable the ambient temperature control, use the environment temperature-controlled command in global configuration mode. To disable the ambient temperature control, use the no form of this command. This command has no arguments or keywords. This command is disabled by default. Global configuration This command does not affect temperature monitoring and alarm thresholds; it only affects whether a module may be powered on. The software does not validate the inlet temperature. If you enter the no form of this command and the cooling capacity is reduced below the module cooling requirement, a syslog warning (and SNMP alarm) is generated. This module status does not change, and an environmental alarm is not raised when you enter the no form of this command.", "environment temperature-controlled no environment temperature-controlled")
@@ -271,7 +280,35 @@ func Keywords() map[string]Keyword {
 func Completions() []protocol.CompletionItem {
 	var c []protocol.CompletionItem
 	for _, k := range Keywords() {
-		c = append(c, k.Completion())
+		c = append(c, walk(k)...)
+	}
+	return c
+}
+
+func walk(k Keyword) []protocol.CompletionItem {
+	var c []protocol.CompletionItem
+	c = append(c, k.Completion())
+	if len(k.Children) > 0 {
+		for _, child := range k.Children {
+			c = append(c, walk(child)...)
+		}
+	}
+	return c
+}
+
+func FindKeyword(name string) *Keyword {
+	for _, k := range Keywords() {
+		if k.Keyword == name {
+			return &k
+		}
+	}
+	return nil
+}
+
+func GetChildrenCompletions(k *Keyword) []protocol.CompletionItem {
+	var c []protocol.CompletionItem
+	for _, child := range k.Children {
+		c = append(c, child.Completion())
 	}
 	return c
 }
