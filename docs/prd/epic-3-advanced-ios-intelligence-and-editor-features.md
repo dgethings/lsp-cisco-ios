@@ -13,6 +13,10 @@ so that I only see relevant suggestions.
 - 1: Command completions are filtered based on the current configuration block (e.g., `interface`, `router bgp`).
 - 2: The LSP suggests appropriate next commands based on the current line.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. The `Completion` function was enhanced with `determineMode` for context awareness, and the `ios.Keyword` struct and scraper were updated to include and populate the `Mode` field.
+
+
 ### Story 3.2: Implement IOS Version Validation
 
 As a network architect,
