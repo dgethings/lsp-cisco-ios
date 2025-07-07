@@ -50,6 +50,10 @@ so that I can write and run unit tests from the beginning.
 - 2: Initial test files are created for the main packages.
 - 3: The CI/CD pipeline is configured to run the tests.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. Initial test files (`lsp/server/server_test.go`, `lsp/textdocument/completion_test.go`) have been created, and the CI/CD pipeline (`.github/workflows/go.yml`) is configured to run tests.
+
+
 ### Story 1.4: Analyze and Document the IOS Command Scraper
 
 As a developer,
