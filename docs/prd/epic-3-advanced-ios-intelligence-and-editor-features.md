@@ -59,6 +59,10 @@ so that I can quickly insert boilerplate code.
 - 1: A collection of snippets is available for common Cisco IOS configurations.
 - 2: Snippets can be inserted into the editor via a command or by typing a prefix.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. VSCode snippets (`snippets/cisco-ios.json`) and Neovim snippets (`lua/cisco-ios/snippets.lua`) have been created.
+
+
 ### Story 3.5: Implement Configuration Tree View
 
 As a network architect,
