@@ -29,6 +29,10 @@ so that I can ensure compatibility with my network devices.
 - 2: The LSP flags commands or parameters that are not available in the specified version.
 - 3: The LSP warns about the use of deprecated commands in the specified version.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. Version fields were added to `ios.Keyword`, the scraper was updated to populate them, `Diagnose` was modified for version validation, and `lsp/server/server.go` was updated for configuration.
+
+
 ### Story 3.3: Implement Device Type Awareness
 
 As a network architect,
