@@ -43,6 +43,10 @@ so that I can fix them before deployment.
 - 1: The LSP flags unknown or invalid Cisco IOS commands.
 - 2: The LSP flags syntax errors in Jinja2 templates.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. The `Diagnose` function was implemented, integrated into `DidChange`, and the LSP server was updated to advertise diagnostics capability.
+
+
 ### Story 2.4: Implement Hover Documentation
 
 As a network architect,
