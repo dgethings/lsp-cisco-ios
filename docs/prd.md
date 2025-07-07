@@ -60,26 +60,86 @@ Network engineers frequently work with complex Cisco IOS configurations. This pr
 
 ## Epics
 
-- Epic1 Core LSP Functionality & Setup: Establish the foundational features of the language server, including syntax highlighting, autocompletion, and basic linting.
-- Epic2 Advanced IOS Intelligence & Editor Features: Implement advanced, context-aware features and editor-specific integrations like the configuration tree view.
+- Epic 1: Analyze and Integrate with Existing LSP Codebase
+- Epic 2: Core LSP Functionality
+- Epic 3: Advanced IOS Intelligence & Editor Features
 
-## Epic 1 Core LSP Functionality & Setup
+## Epic 1: Analyze and Integrate with Existing LSP Codebase
 
-This epic focuses on establishing the core functionality of the language server. It includes setting up the project, implementing fundamental LSP features like syntax highlighting, autocompletion, and diagnostics for both Cisco IOS and Jinja2.
+This epic focuses on understanding the existing LSP codebase, establishing a solid development and testing foundation, and preparing for new feature development.
 
-### Story 1.1 Setup Project and Basic LSP Server
+### Story 1.1: Analyze Existing LSP Implementation
 
 As a developer,
-I want to set up the initial project structure and a basic LSP server,
-so that we have a foundation for implementing features.
+I want to analyze the existing `lsp/` codebase,
+so that I can understand its structure, dependencies, and current capabilities to inform our development plan.
 
 #### Acceptance Criteria
 
-- 1: A Go project for the LSP server is created.
-- 2: A basic LSP server is implemented that can communicate with a client.
-- 3: The repository is initialized with a `.gitignore` file and a `README.md`.
+- 1: A summary of the existing `lsp/` directory's functionality is created and documented.
+- 2: The existing Go dependencies from `go.mod` are reviewed and their purpose is documented.
+- 3: A high-level plan for integrating new features with the existing code is drafted.
+- 4: The `README.md` is updated with instructions for setting up the development environment for this existing project.
 
-### Story 1.2 Implement Syntax Highlighting
+### Story 1.2: Adapt CI/CD Pipeline for LSP
+
+As a developer,
+I want to adapt the existing CI/CD pipeline for the LSP server,
+so that every change is automatically built and tested.
+
+#### Acceptance Criteria
+
+- 1: The CI/CD pipeline is configured to build the Go LSP server.
+- 2: The pipeline is configured to run unit tests on every commit.
+- 3: A script is created to build and package the VSCode extension.
+- 4: A script is created to package the Neovim extension.
+- 5: The process for publishing to the VSCode Marketplace is documented.
+- 6: The process for publishing to a Neovim package manager is documented.
+
+### Story 1.3: Configure Testing Framework
+
+As a developer,
+I want to configure the testing framework for the LSP server,
+so that I can write and run unit tests from the beginning.
+
+#### Acceptance Criteria
+
+- 1: The Go testing framework (`go test`) is configured for the project.
+- 2: Initial test files are created for the main packages.
+- 3: The CI/CD pipeline is configured to run the tests.
+
+### Story 1.4: Analyze and Document the IOS Command Scraper
+
+As a developer,
+I want to analyze the existing `scraper/` application and its data source,
+so that I can understand how to maintain and operate it to provide command data to the LSP.
+
+#### Acceptance Criteria
+
+- 1: The functionality of the `scraper/` application is documented, including its inputs (the Cisco website) and outputs (`keywords.go`).
+- 2: The process for running the scraper to refresh the command database is documented in the `README.md`.
+- 3: The risks associated with depending on the structure of the Cisco documentation website are identified and documented.
+- 4: The `keywords.tmpl` file is reviewed to understand how the Go code is generated.
+
+### Story 1.5: Define UI/UX Specifications for Editor Extensions
+
+As a user,
+I want a clear and consistent user interface for the editor extensions,
+so that I can easily understand and interact with the LSP's features.
+
+#### Acceptance Criteria
+
+- 1: A `frontend-architecture.md` document is created.
+- 2: Wireframes or mockups for the "tree view" are created and added to the new document.
+- 3: The interaction model for all major UI features (hover, diagnostics, tree view) is defined.
+- 4: The user workflow for configuring the extension (e.g., setting IOS version) is documented.
+- 5: A plan for a frontend testing strategy is included.
+
+## Epic 2: Core LSP Functionality
+
+This epic focuses on implementing the core LSP features, building upon the existing codebase.
+
+### Story 2.1: Implement Syntax Highlighting
 
 As a network architect,
 I want to see syntax highlighting for Cisco IOS and Jinja2,
@@ -90,7 +150,7 @@ so that I can easily read and understand the configuration files.
 - 1: Cisco IOS commands are highlighted with distinct colors.
 - 2: Jinja2 templating syntax is highlighted correctly within the configuration files.
 
-### Story 1.3 Implement Autocompletion
+### Story 2.2: Implement Autocompletion
 
 As a network architect,
 I want the editor to suggest completions for IOS commands and Jinja2 syntax,
@@ -101,7 +161,7 @@ so that I can write configurations faster and with fewer errors.
 - 1: The LSP suggests completions for Cisco IOS commands as I type.
 - 2: The LSP suggests completions for Jinja2 syntax.
 
-### Story 1.4 Implement Diagnostics (Linting)
+### Story 2.3: Implement Diagnostics (Linting)
 
 As a network architect,
 I want the editor to show me errors in my configuration in real-time,
@@ -112,7 +172,7 @@ so that I can fix them before deployment.
 - 1: The LSP flags unknown or invalid Cisco IOS commands.
 - 2: The LSP flags syntax errors in Jinja2 templates.
 
-### Story 1.5 Implement Hover Documentation
+### Story 2.4: Implement Hover Documentation
 
 As a network architect,
 I want to see documentation for Cisco IOS commands when I hover over them,
@@ -122,7 +182,7 @@ so that I can quickly understand their purpose and usage.
 
 - 1: Hovering over a Cisco IOS command displays a popup with its documentation.
 
-### Story 1.6 Implement Code Formatting
+### Story 2.5: Implement Code Formatting
 
 As a network architect,
 I want to be able to automatically format my Cisco IOS configuration,
@@ -133,11 +193,11 @@ so that it is clean and consistently styled.
 - 1: A command is available to format the current Cisco IOS configuration file.
 - 2: Formatting is applied consistently according to a predefined style.
 
-## Epic 2 Advanced IOS Intelligence & Editor Features
+## Epic 3: Advanced IOS Intelligence & Editor Features
 
 This epic builds on the core LSP by adding advanced intelligence and editor-specific features. This includes context-aware completions, version validation, and a visual tree view of the configuration.
 
-### Story 2.1 Implement Context-Aware Completions
+### Story 3.1: Implement Context-Aware Completions
 
 As a network architect,
 I want the LSP to provide intelligent completions based on the current configuration context,
@@ -148,7 +208,7 @@ so that I only see relevant suggestions.
 - 1: Command completions are filtered based on the current configuration block (e.g., `interface`, `router bgp`).
 - 2: The LSP suggests appropriate next commands based on the current line.
 
-### Story 2.2 Implement IOS Version Validation
+### Story 3.2: Implement IOS Version Validation
 
 As a network architect,
 I want the LSP to validate my configuration against a specific IOS version,
@@ -160,7 +220,7 @@ so that I can ensure compatibility with my network devices.
 - 2: The LSP flags commands or parameters that are not available in the specified version.
 - 3: The LSP warns about the use of deprecated commands in the specified version.
 
-### Story 2.3 Implement Device Type Awareness
+### Story 3.3: Implement Device Type Awareness
 
 As a network architect,
 I want the LSP to be aware of the device type I am configuring,
@@ -171,7 +231,7 @@ so that I only see commands that are valid for that platform.
 - 1: The user can specify a target device type (e.g., router, switch).
 - 2: The LSP filters command suggestions based on the selected device type.
 
-### Story 2.4 Implement Code Snippets
+### Story 3.4: Implement Code Snippets
 
 As a network architect,
 I want to have access to code snippets for common configurations,
@@ -182,7 +242,7 @@ so that I can quickly insert boilerplate code.
 - 1: A collection of snippets is available for common Cisco IOS configurations.
 - 2: Snippets can be inserted into the editor via a command or by typing a prefix.
 
-### Story 2.5 Implement Configuration Tree View
+### Story 3.5: Implement Configuration Tree View
 
 As a network architect,
 I want to see a tree view of my configuration,
@@ -194,20 +254,7 @@ so that I can easily navigate and understand its structure.
 - 2: The tree view accurately represents the hierarchy of the Cisco IOS configuration.
 - 3: Clicking on a node in the tree view navigates to the corresponding line in the editor.
 
-### Story 2.6 Implement Deployment Workflow
-
-As a developer,
-I want to have a defined process for building and publishing the extensions,
-so that we can reliably release new versions to users.
-
-#### Acceptance Criteria
-
-- 1: A script is created to build and package the VSCode extension.
-- 2: A script is created to package the Neovim extension.
-- 3: The process for publishing to the VSCode Marketplace is documented.
-- 4: The process for publishing to a Neovim package manager is documented.
-
-### Story 2.7 Create User Documentation
+### Story 3.6: Create User Documentation
 
 As a network architect,
 I want clear documentation on how to use the extension,

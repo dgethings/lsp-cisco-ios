@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Cisco IOS",
+  "scopeName": "source.cisco-ios",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#jinja"
+    },
+    {
+      "include": "#keywords"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.character.cisco-ios",
+          "match": "!.*$"
+        }
+      ]
+    },
+    "jinja": {
+      "patterns": [
+        {
+          "name": "meta.embedded.block.jinja",
+          "begin": "\\{\%",
+          "end": "\\%\\}",
+          "patterns": [
+            {
+              "include": "source.jinja"
+            }
+          ]
+        },
+        {
+          "name": "meta.embedded.variable.jinja",
+          "begin": "\\{\{",
+          "end": "\\}\\}",
+          "patterns": [
+            {
+              "include": "source.jinja"
+            }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.cisco-ios",
+          "match": "\\b(interface|router|ip|access-list|banner|enable|configure|line|crypto|snmp-server|ntp)\\b"
+        },
+        {
+          "name": "keyword.control.flow.cisco-ios",
+          "match": "\\b(no|exit|end)\\b"
+        },
+        {
+          "name": "support.function.cisco-ios",
+          "match": "\\b(permit|deny|log|shutdown|negotiation|duplex|speed)\\b"
+        },
+        {
+          "name": "string.quoted.double.cisco-ios",
+          "begin": "\\"",
+          "end": "\\""
+        }
+      ]
+    }
+  }
+}

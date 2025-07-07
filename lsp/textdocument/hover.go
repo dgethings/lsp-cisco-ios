@@ -18,7 +18,7 @@ func Hover(ctx *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, er
 	logger.Debugf("Selected-Keyword %s", word.Keyword)
 	if err != nil {
 		logger.Debugf("Selected-Keyword-Error %v", err)
-		return &h, err
+		return &h, nil // Return nil hover, not an error
 	}
 	h.Contents = word.Documentation
 	logger.Debugf("Selected-Keyword-Documentation %s", h.Contents)
@@ -31,37 +31,41 @@ func selectedWord(contents string, lineNum int, colNum int) (ios.Keyword, error)
 	line := contentAtLine(contents, lineNum)
 	logger.Debugf("Line-Content %s", line)
 
-	lineWords := strings.Fields(line)
+	lineParts := strings.Fields(line)
 	var bestMatch ios.Keyword
-	maxMatch := 0
+	maxMatchLength := 0
 
-	for _, keyword := range ios.Keywords() {
-		keywordWords := strings.Fields(keyword.Keyword)
-		matchCount := 0
-		for i := 0; i < len(lineWords) && i < len(keywordWords); i++ {
-			if lineWords[i] == keywordWords[i] {
-				matchCount++
+	// Iterate through all keywords to find the best match
+	for _, keyword := range ios.Keywords {
+		keywordParts := strings.Fields(keyword.Keyword)
+		currentMatchLength := 0
+
+		// Check for a match from the beginning of the line
+		for i := 0; i < len(lineParts) && i < len(keywordParts); i++ {
+			if lineParts[i] == keywordParts[i] {
+				currentMatchLength++
 			} else {
 				break
 			}
 		}
 
-		if matchCount > 0 && matchCount == len(keywordWords) && matchCount > maxMatch {
-			// Check if cursor is within the matched keyword part on the line
-			matchedPart := strings.Join(lineWords[:matchCount], " ")
-			if colNum <= len(matchedPart) {
-				maxMatch = matchCount
+		// If we found a longer match, or a match of the same length that is more specific
+		if currentMatchLength > maxMatchLength {
+			// Ensure the cursor is within the matched part of the line
+			matchedText := strings.Join(lineParts[:currentMatchLength], " ")
+			if colNum <= len(matchedText) {
+				maxMatchLength = currentMatchLength
 				bestMatch = keyword
 			}
 		}
 	}
 
-	if maxMatch > 0 {
+	if maxMatchLength > 0 {
 		logger.Debugf("Matching-Keyword %s", bestMatch.Keyword)
 		return bestMatch, nil
 	}
 
-	return ios.Keyword{}, nil
+	return ios.Keyword{}, fmt.Errorf("no keyword found at position")
 }
 
 func contentAtLine(contents string, lineNum int) string {

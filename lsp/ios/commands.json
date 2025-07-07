@@ -1,0 +1,36 @@
+[
+  {
+    "keyword": "enable",
+    "documentation": "Enable special command",
+    "insert": "enable",
+    "children": [
+      {
+        "keyword": "last-resort",
+        "documentation": "To enable password parameters as the last resort without specifying the local enable password if no TACACS servers respond, use the enable last-resort command in global configuration mode. To disable the password parameters, use the no form of this command. The password parameters for the router are not enabled. Global configuration (config)",
+        "insert": "last-resort"
+      },
+      {
+        "keyword": "password",
+        "documentation": "To set a local password to control access to various privilege levels",
+        "insert": "password"
+      },
+      {
+        "keyword": "secret",
+        "documentation": "To specify an additional layer of security over the enable password command",
+        "insert": "secret"
+      }
+    ]
+  },
+  {
+    "keyword": "configure",
+    "documentation": "Enter configuration mode",
+    "insert": "configure",
+    "children": [
+      {
+        "keyword": "terminal",
+        "documentation": "Configure from the terminal",
+        "insert": "terminal"
+      }
+    ]
+  }
+]
