@@ -13,6 +13,10 @@ so that I can easily read and understand the configuration files.
 - 1: Cisco IOS commands are highlighted with distinct colors.
 - 2: Jinja2 templating syntax is highlighted correctly within the configuration files.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. Syntax highlighting files for VSCode (`syntaxes/cisco-ios.tmLanguage.json`) and Neovim (`ftplugin/cisco-ios.lua`) have been created.
+
+
 ### Story 2.2: Implement Autocompletion
 
 As a network architect,
