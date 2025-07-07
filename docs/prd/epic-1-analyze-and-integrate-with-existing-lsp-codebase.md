@@ -34,6 +34,10 @@ so that every change is automatically built and tested.
 - 5: The process for publishing to the VSCode Marketplace is documented.
 - 6: The process for publishing to a Neovim package manager is documented.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. The CI/CD pipeline (`.github/workflows/go.yml`) has been updated, packaging scripts (`scripts/package-vscode.sh`, `scripts/package-nvim.sh`) have been created, and publishing documentation (`docs/PUBLISHING.md`) has been added.
+
+
 ### Story 1.3: Configure Testing Framework
 
 As a developer,
