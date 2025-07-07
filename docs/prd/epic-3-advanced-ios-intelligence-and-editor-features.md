@@ -44,6 +44,10 @@ so that I only see commands that are valid for that platform.
 - 1: The user can specify a target device type (e.g., router, switch).
 - 2: The LSP filters command suggestions based on the selected device type.
 
+**Status:** ✅ Completed
+**Completion Notes:** This story was completed during the PRD refinement phase. The `ios.Keyword` struct was updated with `DeviceTypes`, the scraper was modified to extract this, and the `Completion` function and LSP server were updated to filter suggestions based on the configured device type.
+
+
 ### Story 3.4: Implement Code Snippets
 
 As a network architect,
