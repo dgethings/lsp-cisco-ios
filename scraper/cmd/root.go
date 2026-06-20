@@ -63,6 +63,7 @@ type Keyword struct {
 	History     CommandHistory `json:"history"`
 	Usage       UsageGuideline `json:"usage"`
 	Examples    Examples       `json:"examples"`
+	DeviceTypes []string       `json:"device_types"`
 }
 
 type CommandHistory struct {
@@ -71,7 +72,7 @@ type CommandHistory struct {
 }
 
 type UsageGuideline struct {
-	Preamble string `json:"preamble"`	
+	Preamble string `json:"preamble"`
 	Note     string `json:"note"`
 }
 
@@ -131,7 +132,7 @@ func parseChapter(url string) []Keyword {
 			k.Syntax = trim(e.ChildText("section.refsyn"))
 			k.Defaults = trim(e.ChildText("section.command_default > p"))
 			k.Mode = trim(e.ChildText("section.command_modes > p"))
-			
+
 			// Extract version information from command history
 			historyText := e.ChildText("section.command_history")
 			k.MinVersion, k.MaxVersion = extractVersions(historyText)
