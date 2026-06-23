@@ -4,12 +4,13 @@ Copyright © 2024 David Gethings
 package cmd
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"log/slog"
 	"os"
 	"regexp"
 	"strings"
+	"text/template"
 
 	"github.com/gocolly/colly"
 	"github.com/spf13/cobra"
@@ -28,9 +29,11 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		return encoder.Encode(kws)
+		tmpl, err := template.ParseFiles(keywordsTmpl)
+		if err != nil {
+			return fmt.Errorf("parse template %q: %w", keywordsTmpl, err)
+		}
+		return tmpl.Execute(os.Stdout, kws)
 	},
 }
 
@@ -46,18 +49,21 @@ func Execute() {
 
 func init() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
+	rootCmd.Flags().StringVarP(&keywordsTmpl, "template", "t", "keywords.tmpl", "path to the keywords output template")
 }
 
 const url = "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fundamentals/command/cf_command_ref.html"
 
 var keywords []Keyword
 
+var keywordsTmpl string
+
 type Keyword struct {
 	Command     string         `json:"keyword"`
 	Description string         `json:"documentation"`
-	Syntax      string         `json:"syntax"`
+	Snippets    []string       `json:"syntax"`
 	Defaults    string         `json:"defaults"`
-	Mode        string         `json:"mode"`
+	Section     string         `json:"mode"`
 	MinVersion  string         `json:"min_version"`
 	MaxVersion  string         `json:"max_version"`
 	History     CommandHistory `json:"history"`
@@ -129,9 +135,23 @@ func parseChapter(url string) []Keyword {
 			var k Keyword
 			k.Command = trim(e.ChildText("h2.title"))
 			k.Description = trim(e.ChildText("section.section > p.p"))
-			k.Syntax = trim(e.ChildText("section.refsyn"))
+			e.ForEach("p.synblk", func(s int, n *colly.HTMLElement) {
+				var snippet bytes.Buffer
+				i := 1
+				n.ForEach("span,var,kbd", func(_ int, n *colly.HTMLElement) {
+					if n.Name == "var" {
+						n.Text = fmt.Sprintf("${%d:%s}", i, n.Text)
+						i++
+					}
+					snippet.WriteString(n.Text)
+				})
+
+				k.Snippets = append(k.Snippets, snippet.String())
+			})
+			// k.Syntax = trim(e.ChildText("section.refsyn"))
+			// slog.Debug(k.Syntax)
 			k.Defaults = trim(e.ChildText("section.command_default > p"))
-			k.Mode = trim(e.ChildText("section.command_modes > p"))
+			k.Section = trim(e.ChildText("section.command_modes > p"))
 
 			// Extract version information from command history
 			historyText := e.ChildText("section.command_history")
@@ -144,21 +164,60 @@ func parseChapter(url string) []Keyword {
 			k.Examples.Preamble = trim(e.ChildText("section.command_examples > p"))
 			k.Examples.Code = e.ChildText("section.command_examples > pre.codeblock")
 			k.DeviceTypes = extractDeviceTypes(e.ChildText("section.command_modes") + e.ChildText("section.usage_guidelines") + e.ChildText("section.command_examples"))
-			ks = append(ks, k)
+			if section, ok := ConfigSection(k.Section); ok {
+				k.Section = section
+				ks = append(ks, k)
+			}
 		})
 	})
-	c.OnRequest(func(r *colly.Request) {
-		slog.Debug("Vist", "URL", r.URL)
-	})
+	// c.OnRequest(func(r *colly.Request) {
+	// 	slog.Debug("Vist", "URL", r.URL)
+	// })
 	c.OnError(func(r *colly.Response, err error) {
 		slog.Error("Failure", "URL", r.Request.URL, "Error", err)
 	})
 	c.Visit(url)
-	slog.Debug("SECTION KEYWORDS", "count", len(ks))
-	if len(ks) > 0 {
-		slog.Debug("SECTION KEYWORDS", "example", ks[0])
-	}
+	// slog.Debug("SECTION KEYWORDS", "count", len(ks))
+	// if len(ks) > 0 {
+	// 	slog.Debug("SECTION KEYWORDS", "example", ks[0])
+	// }
 	return ks
+}
+
+var configSectionRe = regexp.MustCompile(`\(config[\w-]*#?\)`)
+
+// returns the section name and a bool. true if the section for a key word is a config config section
+// false otherwise
+func ConfigSection(s string) (string, bool) {
+	// TODO: handle the situation where there are multiple sections for a keyword
+	if s == "All configuration modes" {
+		return "", true
+	}
+	// Extract the section name from a parenthesised prompt such as
+	// "(config-if)" or "(config-archive-log-cfg)#". If multiple prompts are
+	// present, the first one wins.
+	if m := configSectionRe.FindString(s); m != "" {
+		inner := strings.TrimSuffix(strings.TrimPrefix(m, "("), ")")
+		inner = strings.TrimSuffix(inner, "#")
+		// Normalise the "cfg" abbreviation used in some docs.
+		inner = strings.ReplaceAll(inner, "-cfg", "-config")
+		return inner, true
+	}
+	lower := strings.ToLower(s)
+	if strings.Contains(lower, "global configuration") {
+		return "config", true
+	}
+	if strings.Contains(lower, "line configuration") {
+		return "config-line", true
+	}
+	if strings.Contains(lower, "config-vlan") {
+		return "config-vlan", true
+	}
+	if strings.Contains(s, "Interface configuration") {
+		return "config-if", true
+	}
+
+	return "", false
 }
 
 // extractVersions attempts to find min and max versions from a given text.
