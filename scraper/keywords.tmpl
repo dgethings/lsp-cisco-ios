@@ -5,16 +5,16 @@ import (
 	"github.com/dgethings/chunter/internal/protocol"
 )
 
-var Keywords = []Keyword{
+var Keywords = []keyword.Keyword{
 {{- range . }}
     {
         Keyword: {{ printf "%q" .Command }},
         Description: keyword.Description{
             Format: protocol.PlainText,
-            Value:  {{ printf "%q" .Examples.Code }},
+            Value:  {{ printf "%q" .Description }},
         },
         Section: {{ printf "%q" .Section }},
-        Snippets: {{ printf "%q" .Snippets }},
+        Snippets: []string{ {{- range .Snippets }} {{ printf "%q" . }}, {{- end }} },
     },
 {{- end }}
 }

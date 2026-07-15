@@ -24,16 +24,19 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
-		kws, err := getKeywords()
-		if err != nil {
-			return err
+		var keywords []Keyword
+		for _, url := range urls {
+			kws, err := getKeywords(url)
+			if err != nil {
+				return err
+			}
+			keywords = append(keywords, kws...)
 		}
-
 		tmpl, err := template.ParseFiles(keywordsTmpl)
 		if err != nil {
 			return fmt.Errorf("parse template %q: %w", keywordsTmpl, err)
 		}
-		return tmpl.Execute(os.Stdout, kws)
+		return tmpl.Execute(os.Stdout, keywords)
 	},
 }
 
@@ -52,7 +55,10 @@ func init() {
 	rootCmd.Flags().StringVarP(&keywordsTmpl, "template", "t", "keywords.tmpl", "path to the keywords output template")
 }
 
-const url = "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fundamentals/command/cf_command_ref.html"
+var urls = []string{
+	"https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fundamentals/command/cf_command_ref.html",
+	"https://www.cisco.com/c/en/us/support/routers/asr-1000-series-aggregation-services-routers/products-command-reference-list.html",
+}
 
 var keywords []Keyword
 
@@ -87,7 +93,7 @@ type Examples struct {
 	Code     string `json:"code"`
 }
 
-func getKeywords() ([]Keyword, error) {
+func getKeywords(url string) ([]Keyword, error) {
 	c := colly.NewCollector(
 		colly.CacheDir("./cache"),
 	)
@@ -106,8 +112,14 @@ func getKeywords() ([]Keyword, error) {
 		})
 	})
 
+	c.OnHTML("a[data-id='link3']", func(h *colly.HTMLElement) {
+		url := fmt.Sprintf("%s%s", "https://www.cisco.com", h.Attr("href"))
+		slog.Debug("Visit", "URL", url)
+		c.Visit(url)
+	})
+
 	c.OnRequest(func(r *colly.Request) {
-		slog.Debug("Vist", "URL", r.URL)
+		slog.Debug("Visit", "URL", r.URL)
 	})
 
 	c.OnError(func(r *colly.Response, err error) {
@@ -134,7 +146,7 @@ func parseChapter(url string) []Keyword {
 		h.ForEach("article.reference", func(_ int, e *colly.HTMLElement) {
 			var k Keyword
 			k.Command = trim(e.ChildText("h2.title"))
-			k.Description = trim(e.ChildText("section.section > p.p"))
+			k.Description = trim(e.ChildText("section.section > p.p:nth-child(1)"))
 			e.ForEach("p.synblk", func(s int, n *colly.HTMLElement) {
 				var snippet bytes.Buffer
 				i := 1
